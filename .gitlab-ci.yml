@@ -1,0 +1,25 @@
+image: node
+cache:
+  paths:
+    - node_modules
+stages:
+  - test
+build_test:
+  stage: test
+  services:
+    - name: postgres:15.2
+  variables:
+    # Configure environment
+    POSTGRES_USER: 'test'
+    POSTGRES_PASSWORD: 'secret'
+    POSTGRES_DB: 'squad'
+    POSTGRES_DB_HOST: 'postgres'
+
+    DB_USERNAME: 'test'
+    DB_PASSWORD: 'secret'
+    DB_NAME: 'squad'
+    DB_HOST: 'postgres'
+
+  script:
+    - npm install
+    - npm test
