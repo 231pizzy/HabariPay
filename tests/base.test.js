@@ -6,7 +6,7 @@ const request = supertest(app);
 
 describe('Basic', () => {
   test('Mic check', async () => {
-    const response = await request.get('/v1/').send();
+    const response = await request.get('/habariPay/').send();
 
     expect(response.status).toBe(httpStatus.OK);
     expect(response.body.message).toBe('It Works');

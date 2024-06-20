@@ -1,4 +1,5 @@
 const app = require('./src/app');
+const startSettlementCronJob = require('./src/controllers/settlementController');
 require('dotenv').config();
 
 const port = process.env.PORT || 3001;
@@ -31,3 +32,6 @@ process.on('SIGTERM', () => {
         server.close();
     }
 });
+
+// Start the settlement cron job
+startSettlementCronJob();

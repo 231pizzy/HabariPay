@@ -5,21 +5,21 @@ const xss = require('xss-clean');
 const cors = require('cors');
 const limiter = require('./middleware/rateLimit');
 const compression = require('./middleware/compression');
-const v1Routes = require('./routes');
+// const TransactionFee = require('./models/transactionFee');
 const db = require('./config');
-
+const router = require('./routes');
 
 
 // Establish database connection
-db.sync()
+db.sync({ force: false })
   .then(() => {
-    console.log("Database is connected");
   })
   .catch((err) => {
     console.error('Failed to connect to the database:', err);
   });
 
 const app = express();
+// app.use("/auth", authRouth);
 
 // Security HTTP headers
 app.use(helmet());
@@ -40,7 +40,7 @@ app.use(xss());
 app.use(cors());
 
 // Define routes
-app.use('/v1/', v1Routes);
+app.use('/habariPay', router);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

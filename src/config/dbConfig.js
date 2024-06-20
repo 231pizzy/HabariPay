@@ -12,7 +12,9 @@ if (stage === "production") {
   config = require("./prod");
 } else if (stage === "development") {
   config = require("./dev");
-} else {
+}  else if (stage === "test") {
+  config = require("./testdb");
+}else {
   config = {};
 }
 
