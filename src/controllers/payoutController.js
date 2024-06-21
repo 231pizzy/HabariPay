@@ -1,8 +1,9 @@
 const { Op } = require('sequelize');
 const db = require('../config');
-const Merchant = require('../models/merchant');
+const Merchant = require('../models/merchants');
 const Payout = require('../models/payout');
 const Transaction = require('../models/transaction');
+const { v4: uuidv4 } = require('uuid');
 
 const createPayout = async (req, res) => {
   const merchantId = req.merchantId;
@@ -11,7 +12,7 @@ const createPayout = async (req, res) => {
     // Find the merchant based on merchantId from the header token
     const merchant = await Merchant.findOne({ where: { merchantId } });
     if (!merchant) {
-      return res.status(404).json({ success: false, message: 'Merchant not found' });
+      return res.status(401).json({ success: false, message: 'Merchant not found' });
     }
 
     // Start a transaction using Sequelize
@@ -22,7 +23,7 @@ const createPayout = async (req, res) => {
       const pendingTransactions = await Transaction.findAll({
         where: {
           merchantId,
-          payoutStatus: 'pending',
+          Payoutstatus: 'pending',
         },
         transaction,
       });
@@ -39,6 +40,7 @@ const createPayout = async (req, res) => {
         totalPayout += netAmount;
       }
 
+
       // Update merchant's account balance
       await Merchant.update(
         { accountBalance: parseFloat(merchant.accountBalance) + totalPayout },
@@ -47,14 +49,16 @@ const createPayout = async (req, res) => {
 
       // Update payout status for each transaction
       await Transaction.update(
-        { payoutStatus: 'success' },
+        { Payoutstatus: 'success' },
         { where: { id: { [Op.in]: pendingTransactions.map(t => t.id) } }, transaction }
       );
 
       // Create the payout record
       const newPayout = await Payout.create(
         {
+          reference: uuidv4(),
           amount: totalPayout,
+          businessName: merchant.businessName,
           merchantId: merchant.merchantId,
         },
         { transaction }

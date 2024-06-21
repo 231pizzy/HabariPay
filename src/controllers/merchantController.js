@@ -55,12 +55,9 @@ const registerMerchant = async (req, res) => {
 
         // Handle unique constraint error for email
         if (error.name === 'SequelizeUniqueConstraintError' && error.errors[0]?.path === 'email') {
-            // Return a generic message for user
             return res.status(400).json({ message: 'Email already exists', field: 'email' });
         }
 
-        // Log the error for internal debugging purposes
-        // Ensure not to expose sensitive details in the log
         console.error('Error occurred while registering merchant:', error);
 
         return res.status(500).json({ message: 'An error occurred while registering the merchant.' });
@@ -85,7 +82,7 @@ const loginMerchant = async (req, res) => {
     const merchant = await Merchant.findOne({ where: { email: normalizedEmail } });
     console.log("m id:", merchant.merchantId)
 
-    // If merchant not found or password does not match, return 401 Unauthorized
+    // If merchant not found or password does not match
     if (!merchant || !await bcrypt.compare(password, merchant.password)) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }

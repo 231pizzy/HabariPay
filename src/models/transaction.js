@@ -112,10 +112,10 @@ const Transaction = db.define('Transaction', {
   },
 }, {});
 
-Transaction.associate = (models) => {
-  Transaction.belongsTo(models.Merchant, { foreignKey: 'merchantId' });
-  Transaction.belongsTo(models.User, { foreignKey: 'userId' });
-  Transaction.hasOne(models.TransactionFee, { foreignKey: 'transactionId' });
-};
+// Transaction.associate = (models) => {
+//   Transaction.belongsTo(models.Merchant, { foreignKey: 'merchantId' });
+//   Transaction.belongsTo(models.User, { foreignKey: 'userId' });
+//   Transaction.hasOne(models.TransactionFee, { foreignKey: 'transactionId' });
+// };
 
 module.exports = Transaction;

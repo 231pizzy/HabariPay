@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
+const { Op, sequelize } = require('sequelize');
 const bcrypt = require('bcrypt');
 const db = require('../config');
 const User = require('../models/user');
@@ -45,7 +46,7 @@ const createVirtualAccountTransaction = async (req, res) => {
     const transaction = await db.transaction();
 
     try { 
-      // Update user balance (deduct transaction amount)
+      // Update user balance
       await User.update(
         { accountBalance: userBalance - transactionValue },
         { where: { id: user.id }, transaction }
@@ -145,7 +146,7 @@ const createCardTransaction = async (req, res) => {
           reference,
           transactionValue,
           transactionDescription: description,
-          cardNumber: last4CardDigits, // Store only the last 4 digits
+          cardNumber: last4CardDigits, 
           cardHolderName,
           cardExpiryDate,
           cardVerificationCode: cvv,
@@ -173,13 +174,103 @@ const createCardTransaction = async (req, res) => {
   }
 };
 
-const getTransactions = async (req, res) => {
-  // Your logic to get transactions
+const getAvailableBalance = async (req, res) => {
+  const merchantId = req.merchantId;
+  try {
+    // Fetch all successful transactions
+    const successfulTransactions = await Transaction.findAll({
+      where: {
+        merchantId,
+        status: 'success',
+      },
+    });
+
+    // Fetch all successful transactions with payout status as 'success'
+    const payoutSuccessfulTransactions = await Transaction.findAll({
+      where: {
+        merchantId,
+        Payoutstatus: 'success',
+      },
+    });
+
+    // Fetch all successful transactions with payout status as 'pending'
+    const pendingPayoutTransactions = await Transaction.findAll({
+      where: {
+        merchantId,
+        Payoutstatus: 'pending',
+        status: 'success',
+      },
+    });
+
+    // Convert and sum transaction values
+    const totalSuccessfulTransactions = successfulTransactions.reduce((total, transaction) => {
+      return total + parseFloat(transaction.transactionValue);
+    }, 0);
+
+    const totalPayoutSuccessfulTransactions = payoutSuccessfulTransactions.reduce((total, transaction) => {
+      return total + parseFloat(transaction.transactionValue);
+    }, 0);
+
+    // Check if total successful transactions equal total paid out transactions
+    if (totalSuccessfulTransactions === totalPayoutSuccessfulTransactions) {
+      return res.status(200).json({ success: true, availableBalance: 0 });
+    }
+
+    // Sum fees and transaction values for pending payouts
+    const totalPendingFees = pendingPayoutTransactions.reduce((total, transaction) => {
+      return total + parseFloat(transaction.fee);
+    }, 0);
+
+    const totalPendingValue = pendingPayoutTransactions.reduce((total, transaction) => {
+      return total + parseFloat(transaction.transactionValue);
+    }, 0);
+
+    // Calculate available balance
+    const availableBalance = totalPendingValue - totalPendingFees;
+
+    return res.status(200).json({ success: true, availableBalance });
+  } catch (error) {
+    console.error('Error getting available balance:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 };
+
+const getPendingSettlement = async (req, res) => {
+  const merchantId = req.merchantId;
+  try {
+    // Fetch all transactions with status as 'pending'
+    const pendingSettlement = await Transaction.findAll({
+      where: {
+        merchantId,
+        status: 'pending',
+      },
+    });
+
+    // Convert and sum transaction values
+    const totalPendingSettlements = pendingSettlement.reduce((total, transaction) => {
+      return total + parseFloat(transaction.transactionValue);
+    }, 0);
+
+    // Convert and sum fees
+    const totalPendingSettlementsFees = pendingSettlement.reduce((total, transaction) => {
+      return total + parseFloat(transaction.fee);
+    }, 0);
+
+    // Calculate pending settlement amount
+    const TotalPendingSettlement = totalPendingSettlements - totalPendingSettlementsFees;
+
+    return res.status(200).json({ success: true, TotalPendingSettlement });
+  } catch (error) {
+    console.error('Error getting pending settlements:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 
 
 module.exports = {
   createVirtualAccountTransaction,
   createCardTransaction,
-  getTransactions,
+  getAvailableBalance,
+  getPendingSettlement
 };

@@ -1,13 +1,29 @@
-// src/models/payout.js
-module.exports = (sequelize, DataTypes) => {
-  const Payout = sequelize.define('Payout', {
-    amount: DataTypes.FLOAT,
-    fee: DataTypes.FLOAT,
-  }, {});
+const { DataTypes } = require('sequelize');
+const db = require('../config');
 
-  Payout.associate = models => {
-    Payout.belongsTo(models.Merchant, { foreignKey: 'merchantId' });
-  };
+const Payout = db.define('Payout', {
+  reference: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    defaultValue: 0.0,
+  },
+  businessName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  merchantId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+}, {});
 
-  return Payout;
+Payout.associate = (models) => {
+  Payout.belongsTo(models.Merchant, { foreignKey: 'merchantId' });
 };
+
+module.exports = Payout;

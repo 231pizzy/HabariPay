@@ -5,7 +5,6 @@ const xss = require('xss-clean');
 const cors = require('cors');
 const limiter = require('./middleware/rateLimit');
 const compression = require('./middleware/compression');
-// const TransactionFee = require('./models/transactionFee');
 const db = require('./config');
 const router = require('./routes');
 
@@ -19,7 +18,7 @@ db.sync({ force: false })
   });
 
 const app = express();
-// app.use("/auth", authRouth);
+
 
 // Security HTTP headers
 app.use(helmet());
